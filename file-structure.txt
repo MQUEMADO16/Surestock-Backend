@@ -1,40 +1,37 @@
 com.surestock
 │
-├── SurestockApplication.java        // [Main] Already exists
+├── SurestockApplication.java        // [Main] Entry point
 │
-├── config/                          // [Config]
-│   ├── SecurityConfig.java          // (Future) Spring Security setup
-│   └── WebConfig.java               // CORS setup (for React)
+├── config/                          // [Configuration]
+│   └── WebConfig.java               // CORS setup (Allows React to connect)
 │
-├── controller/                      // [API Layer]
-│   ├── AuthController.java          // Login/Register endpoints
-│   ├── ProductController.java       // Product CRUD
+├── controller/                      // [API Layer] REST Endpoints
+│   ├── AuthController.java          // Login/Register
+│   ├── ProductController.java       // Product & Inventory management
 │   └── ReportController.java        // Analytics endpoints
 │
-├── service/                         // [Logic Layer]
-│   ├── UserService.java             // User logic
-│   ├── ProductService.java          // Product logic
-│   ├── ReportService.java           // (Context) Selects the right report strategy
+├── service/                         // [Logic Layer] Business Rules
+│   ├── UserService.java
+│   ├── ProductService.java
+│   ├── ReportService.java           // (Context) Strategy selector
 │   │
-│   └── report/                      // [Strategy Pattern Package]
-│       ├── IReportStrategy.java     // (Interface) Common report contract
-│       ├── SalesReportStrategy.java // (Concrete) Logic for sales
-│       └── InventoryReportStrategy.java // (Concrete) Logic for inventory
+│   └── report/                      // [Strategy Pattern]
+│       ├── IReportStrategy.java     // (Interface)
+│       ├── SalesReportStrategy.java // (Concrete)
+│       └── InventoryReportStrategy.java // (Concrete)
 │
-├── repository/                      // [Data Layer]
+├── repository/                      // [Data Layer] Database Access
 │   ├── UserRepository.java
-│   ├── BusinessRepository.java
 │   ├── ProductRepository.java
 │   └── TransactionRepository.java
 │
-├── model/                           // [Database Entities]
+├── model/                           // [Database Entities] Tables
 │   ├── Role.java                    // (Enum) OWNER, EMPLOYEE
-│   ├── User.java                    // Users table
-│   ├── Business.java                // Business table
-│   ├── Product.java                 // Products table (includes Inventory data)
-│   └── SalesTransaction.java        // History of sales
+│   ├── User.java
+│   ├── Product.java                 // (Product + Inventory columns)
+│   └── SalesTransaction.java
 │
-└── dto/                             // [Data Transfer Objects]
+└── dto/                             // [Data Transfer Objects] JSON shapes
     ├── ProductDTO.java
     └── report/
-        └── ReportResultDTO.java     // JSON response for any report
+        └── ReportResultDTO.java
