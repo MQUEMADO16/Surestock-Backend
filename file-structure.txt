@@ -3,35 +3,35 @@ com.surestock
 ├── SurestockApplication.java        // [Main] Entry point
 │
 ├── config/                          // [Configuration]
-│   └── WebConfig.java               // CORS setup (Allows React to connect)
+│   └── WebConfig.java               // CORS setup
 │
 ├── controller/                      // [API Layer] REST Endpoints
 │   ├── AuthController.java          // Login/Register
 │   ├── ProductController.java       // Product & Inventory management
 │   └── ReportController.java        // Analytics endpoints
 │
-├── service/                         // [Logic Layer] Business Rules
-│   ├── UserService.java
-│   ├── ProductService.java
-│   ├── ReportService.java           // (Context) Strategy selector
-│   │
-│   └── report/                      // [Strategy Pattern]
-│       ├── IReportStrategy.java     // (Interface)
-│       ├── SalesReportStrategy.java // (Concrete)
-│       └── InventoryReportStrategy.java // (Concrete)
-│
-├── repository/                      // [Data Layer] Database Access
-│   ├── UserRepository.java
-│   ├── ProductRepository.java
-│   └── TransactionRepository.java
+├── dto/                             // [Data Transfer Objects] JSON shapes
+│   ├── ProductDTO.java
+│   └── report/
+│       └── ReportResultDTO.java
 │
 ├── model/                           // [Database Entities] Tables
-│   ├── Role.java                    // (Enum) OWNER, EMPLOYEE
-│   ├── User.java
 │   ├── Product.java                 // (Product + Inventory columns)
-│   └── SalesTransaction.java
+│   ├── Role.java                    // (Enum) OWNER, EMPLOYEE
+│   ├── SalesTransaction.java
+│   └── User.java
 │
-└── dto/                             // [Data Transfer Objects] JSON shapes
-    ├── ProductDTO.java
-    └── report/
-        └── ReportResultDTO.java
+├── repository/                      // [Data Layer] Database Access
+│   ├── ProductRepository.java
+│   ├── TransactionRepository.java
+│   └── UserRepository.java
+│
+└── service/                         // [Logic Layer] Business Rules
+    ├── ProductService.java
+    ├── ReportService.java           // (Context) Strategy selector
+    ├── UserService.java
+    │
+    └── report/                      // [Strategy Pattern]
+        ├── InventoryReportStrategy.java // (Concrete)
+        ├── IReportStrategy.java     // (Interface)
+        └── SalesReportStrategy.java // (Concrete)
