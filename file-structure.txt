@@ -1,63 +1,40 @@
 com.surestock
 │
-├── SurestockApplication.java        // [Main] The entry point (already exists)
+├── SurestockApplication.java        // [Main] Already exists
 │
-├── config/                          // [Configuration] Security & App Setup
-│   ├── SecurityConfig.java          // Handles JWT/Login security settings
-│   ├── WebConfig.java               // Handles CORS (allowing React to talk to Java)
-│   └── OpenApiConfig.java           // (Optional) Swagger documentation setup
+├── config/                          // [Config]
+│   ├── SecurityConfig.java          // (Future) Spring Security setup
+│   └── WebConfig.java               // CORS setup (for React)
 │
-├── controller/                      // [API Layer] (REST Endpoints)
-│   ├── AuthController.java          // Login, Register, Forgot Password
-│   ├── BusinessController.java      // Manage Business settings (Owner only)
-│   ├── ProductController.java       // CRUD for Products
-│   ├── InventoryController.java     // Stock updates, Low stock alerts
-│   ├── SupplierController.java      // Manage Suppliers
-│   └── AnalyticsController.java     // Revenue endpoints, Dashboard data
+├── controller/                      // [API Layer]
+│   ├── AuthController.java          // Login/Register endpoints
+│   ├── ProductController.java       // Product CRUD
+│   └── ReportController.java        // Analytics endpoints
 │
-├── service/                         // [Logic Layer] (Business Logic/Rules) THIS STUFF CAN BE CHANGED BASED ON OUR DIAGRAMS
-│   ├── AuthService.java             // Validates passwords, generates tokens
-│   ├── BusinessService.java         // Creates new Business tenants
-│   ├── ProductService.java          // Check duplicate SKUs, valid prices
-│   ├── InventoryService.java        // Updates stock, checks thresholds
-│   ├── SupplierService.java         // Links products to suppliers
-│   └── AnalyticsService.java        // Calculates revenue, top sellers
+├── service/                         // [Logic Layer]
+│   ├── UserService.java             // User logic
+│   ├── ProductService.java          // Product logic
+│   ├── ReportService.java           // (Context) Selects the right report strategy
+│   │
+│   └── report/                      // [Strategy Pattern Package]
+│       ├── IReportStrategy.java     // (Interface) Common report contract
+│       ├── SalesReportStrategy.java // (Concrete) Logic for sales
+│       └── InventoryReportStrategy.java // (Concrete) Logic for inventory
 │
-├── repository/                      // [Data Layer] Database Interactions
+├── repository/                      // [Data Layer]
 │   ├── UserRepository.java
 │   ├── BusinessRepository.java
 │   ├── ProductRepository.java
-│   ├── InventoryRepository.java
-│   ├── SupplierRepository.java
-│   └── TransactionRepository.java   // Fetch sales history for reports
+│   └── TransactionRepository.java
 │
-├── model/                           // [Database Entities] The Tables
-│   ├── User.java                    // Stores email, passwordHash, role
-│   ├── Role.java                    // Enum: OWNER, STAFF
-│   ├── Business.java                // The Tenant (Name, Subscription)
-│   ├── Product.java                 // Name, SKU, Price, BusinessID
-│   ├── InventoryItem.java           // Quantity, ReorderThreshold
-│   ├── Supplier.java                // Name, Contact Info
-│   └── SalesTransaction.java        // Timestamp, QtySold, SalePrice (For Analytics)
+├── model/                           // [Database Entities]
+│   ├── Role.java                    // (Enum) OWNER, EMPLOYEE
+│   ├── User.java                    // Users table
+│   ├── Business.java                // Business table
+│   ├── Product.java                 // Products table (includes Inventory data)
+│   └── SalesTransaction.java        // History of sales
 │
-├── dto/                             // [Data Transfer Objects] JSON Shapes
-│   ├── auth/                        // Folder for Auth related DTOs
-│   │   ├── LoginRequest.java
-│   │   ├── RegisterRequest.java
-│   │   └── AuthResponse.java
-│   │
-│   ├── product/                     // Folder for Product/Inventory DTOs
-│   │   ├── ProductRequest.java      // What frontend sends to create product
-│   │   ├── ProductResponse.java     // What backend sends back
-│   │   └── StockUpdateRequest.java  // { "quantityChange": 5 }
-│   │
-│   └── report/                      // Folder for Analytics DTOs
-│       ├── SalesReportDTO.java
-│       └── DashboardStatsDTO.java
-│
-├── exception/                       // [Error Handling]
-│   ├── GlobalExceptionHandler.java  // Catches crashes and sends nice JSON errors
-│   └── ResourceNotFoundException.java
-│
-└── util/                            // [Utilities] Helpers
-    └── JwtUtils.java                // Helper to generate security tokens
+└── dto/                             // [Data Transfer Objects]
+    ├── ProductDTO.java
+    └── report/
+        └── ReportResultDTO.java     // JSON response for any report
