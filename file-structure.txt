@@ -3,7 +3,8 @@ com.surestock
 ├── SurestockApplication.java        // [Main] Entry point
 │
 ├── config/                          // [Configuration]
-│   └── WebConfig.java               // CORS setup
+│   ├── SecurityConfig.java          // Security setup (CSRF disabled, public API)
+│   └── WebConfig.java               // CORS setup (Allows React to connect)
 │
 ├── controller/                      // [API Layer] REST Endpoints
 │   ├── AuthController.java          // Login/Register
@@ -11,9 +12,11 @@ com.surestock
 │   └── ReportController.java        // Analytics endpoints
 │
 ├── dto/                             // [Data Transfer Objects] JSON shapes
-│   ├── ProductDTO.java
-│   └── report/
-│       └── ReportResultDTO.java
+│   ├── auth/
+│   │   └── RegisterRequestDTO.java  // Clean DTO for registration
+│   ├── report/
+│   │   └── ReportResultDTO.java     // JSON response for reports
+│   └── ProductDTO.java              // JSON for creating products
 │
 ├── model/                           // [Database Entities] Tables
 │   ├── Product.java                 // (Product + Inventory columns)
