@@ -39,20 +39,22 @@ public class AuthController {
 
     @PostMapping("/login")
     public UserResponseDTO login(@RequestBody LoginRequestDTO request, HttpServletRequest servletRequest) {
-        // Actually authenticate with Spring Security Manager
+        // Authenticate (Checks DB + Password automatically)
+        // If this fails, it throws BadCredentialsException (Caught by GlobalHandler)
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        // Set the Context
+        // Set Session
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // Force the session to persist
         HttpSession session = servletRequest.getSession(true);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
 
-        // Return user wrapped in DTO
-        User user = userService.authenticate(request.getEmail(), request.getPassword());
+        // Fetch User Details for the Response
+        User user = userService.findByEmail(request.getEmail());
+
         return new UserResponseDTO(user);
     }
 }
