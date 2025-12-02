@@ -6,10 +6,12 @@ import com.surestock.model.User;
 import com.surestock.repository.BusinessRepository;
 import com.surestock.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserService {
@@ -22,34 +24,34 @@ public class UserService {
 
     private final PasswordEncoder encoder = new BCryptPasswordEncoder();
 
-    @Transactional // Ensures Business and User are created together, or both fail
+    @Transactional
     public User registerOwner(String email, String rawPassword, String businessName) {
-        // Check if email exists
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Email is already in use: " + email);
+            // Returns HTTP 409 Conflict instead of 500 Error
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already in use");
         }
 
-        // Create the Business first
+        // Create Business
         Business newBusiness = new Business();
         newBusiness.setName(businessName);
-        newBusiness = businessRepository.save(newBusiness); // DB generates the ID here
+        newBusiness = businessRepository.save(newBusiness);
 
-        // Create the User linked to that Business
+        // Create User
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setPassword(encoder.encode(rawPassword));
-        newUser.setRole(Role.OWNER); // Registration endpoint is for Owners
-        newUser.setBusinessId(newBusiness.getId()); // Use the generated ID
+        newUser.setRole(Role.OWNER);
+        newUser.setBusinessId(newBusiness.getId());
 
         return userRepository.save(newUser);
     }
 
     public User authenticate(String email, String rawPassword) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
         if (!encoder.matches(rawPassword, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         return user;
@@ -57,6 +59,6 @@ public class UserService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 }
