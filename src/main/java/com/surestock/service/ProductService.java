@@ -5,6 +5,7 @@ import com.surestock.model.Product;
 import com.surestock.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -50,9 +51,14 @@ public class ProductService {
 
     /**
      * Updates the stock level of a product.
-     * @param quantityChange Positive to add stock, negative to remove stock.
+     * * Uses @Transactional to define the scope of the update, and relies on
+     * Pessimistic Locking in the repository to prevent race conditions.
+     * * @param quantityChange Positive to add stock, negative to remove stock.
      */
+    @Transactional // Defines the transaction boundary
     public Product updateStock(Long productId, int quantityChange) {
+        // NOTE: findById is now expected to have @Lock(PESSIMISTIC_WRITE) in the repository.
+        // This locks the product row in the database as soon as it's read.
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
 
@@ -60,9 +66,11 @@ public class ProductService {
 
         // Prevent negative stock
         if (newQuantity < 0) {
+            // Transaction fails, lock is released, and original state is maintained.
             throw new RuntimeException("Insufficient stock! Cannot reduce below 0.");
         }
 
+        // Write operation completes the transaction and releases the lock.
         product.setQuantity(newQuantity);
         return productRepository.save(product);
     }
@@ -99,9 +107,6 @@ public class ProductService {
         if (dto.getReorderThreshold() != null && dto.getReorderThreshold() >= 0) {
             product.setReorderThreshold(dto.getReorderThreshold());
         }
-
-        // Note: Quantity updates are typically handled via updateStock,
-        // but could be forcefully overridden here if desired.
 
         return productRepository.save(product);
     }
