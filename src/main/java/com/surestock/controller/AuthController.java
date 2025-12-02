@@ -2,9 +2,17 @@ package com.surestock.controller;
 
 import com.surestock.dto.auth.LoginRequestDTO;
 import com.surestock.dto.auth.RegisterRequestDTO;
+import com.surestock.dto.auth.UserResponseDTO;
 import com.surestock.model.User;
 import com.surestock.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,19 +22,37 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
     @PostMapping("/register")
-    public User register(@RequestBody RegisterRequestDTO request) {
+    public UserResponseDTO register(@RequestBody RegisterRequestDTO request) {
         // Pass the business NAME, not the ID.
         // The service will handle creating the ID.
-        return userService.registerOwner(
+        User newUser = userService.registerOwner(
                 request.getEmail(),
                 request.getPassword(),
                 request.getBusinessName()
         );
+        return new UserResponseDTO(newUser);
     }
 
     @PostMapping("/login")
-    public User login(@RequestBody LoginRequestDTO request) {
-        return userService.authenticate(request.getEmail(), request.getPassword());
+    public UserResponseDTO login(@RequestBody LoginRequestDTO request, HttpServletRequest servletRequest) {
+        // Actually authenticate with Spring Security Manager
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
+        // Set the Context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Force the session to persist
+        HttpSession session = servletRequest.getSession(true);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+
+        // Return user wrapped in DTO
+        User user = userService.authenticate(request.getEmail(), request.getPassword());
+        return new UserResponseDTO(user);
     }
 }

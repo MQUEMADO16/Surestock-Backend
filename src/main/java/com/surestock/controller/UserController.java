@@ -1,6 +1,7 @@
 package com.surestock.controller;
 
 import com.surestock.dto.auth.EmployeeCreationRequestDTO;
+import com.surestock.dto.auth.UserResponseDTO;
 import com.surestock.model.Role;
 import com.surestock.model.User;
 import com.surestock.service.BusinessService;
@@ -31,16 +32,18 @@ public class UserController {
      * POST /api/users/employee
      */
     @PostMapping("/employee")
-    public User createEmployee(@RequestBody EmployeeCreationRequestDTO dto, @AuthenticationPrincipal UserDetails userDetails) {
+    public UserResponseDTO createEmployee(@RequestBody EmployeeCreationRequestDTO dto, @AuthenticationPrincipal UserDetails userDetails) {
         User owner = getCurrentUser(userDetails);
 
-        // Security Check: Only Owners can hire employees
+        // Only Owners can hire employees
         if (owner.getRole() != Role.OWNER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Only Owners can manage user accounts.");
         }
 
-        // Action: Create the employee, passing the OWNER's businessId securely
-        return userService.createEmployee(owner.getBusinessId(), dto);
+        // Create the employee, passing the OWNER's businessId securely
+        User newEmployee = userService.createEmployee(owner.getBusinessId(), dto);
+
+        return new UserResponseDTO(newEmployee);
     }
 
     /**
@@ -54,19 +57,19 @@ public class UserController {
 
         User requestingUser = getCurrentUser(userDetails);
 
-        // Security Check: Only Owners can manage user accounts
+        // Only Owners can manage user accounts
         if (requestingUser.getRole() != Role.OWNER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Only Owners can manage user accounts.");
         }
 
-        // Target Check: Ensure the employee belongs to the owner's business
+        // Ensure the employee belongs to the owner's business
         User employeeToDelete = userService.findById(employeeId);
 
         if (!employeeToDelete.getBusinessId().equals(requestingUser.getBusinessId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot delete user from another business.");
         }
 
-        // Action: Delete the Employee user record
+        // Delete the Employee user record
         userService.deleteUser(employeeId);
         return ResponseEntity.noContent().build();
     }
@@ -79,7 +82,7 @@ public class UserController {
     public ResponseEntity<Void> closeAccount(@AuthenticationPrincipal UserDetails userDetails) {
         User owner = getCurrentUser(userDetails);
 
-        // Security Check: Ensure the user is the owner (for conceptual clarity)
+        // Ensure the user is the owner (for conceptual clarity)
         if (owner.getRole() != Role.OWNER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Action restricted to account Owner.");
         }
