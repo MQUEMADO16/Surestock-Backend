@@ -10,7 +10,4 @@ import lombok.NoArgsConstructor;
 public class ReportResultDTO {
     private String title;
     private String summary;
-
-    // You can add a Map<String, Object> details; here later
-    // if you want to send charts/graphs data to React.
 }
