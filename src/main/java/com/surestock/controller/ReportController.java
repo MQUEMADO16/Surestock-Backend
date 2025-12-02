@@ -31,6 +31,9 @@ public class ReportController {
         // Dynamically get the business ID from the logged-in user
         Long businessId = getCurrentBusinessId(userDetails);
 
+        // If reportService throws IllegalArgumentException (invalid type),
+        // GlobalHandler's generic catch-all will log it and return 500,
+        // OR we can add a specific handler for it later.
         return reportService.getReport(type.toUpperCase(), businessId);
     }
 }

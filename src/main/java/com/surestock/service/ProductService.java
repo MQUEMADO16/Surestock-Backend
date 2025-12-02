@@ -32,11 +32,11 @@ public class ProductService {
         product.setName(dto.getName());
         product.setSku(dto.getSku());
         product.setPrice(dto.getPrice());
-        product.setCost(dto.getCost()); // For Profit Margin Analytics
+        product.setCost(dto.getCost());
         product.setQuantity(dto.getQuantity());
         product.setReorderThreshold(dto.getReorderThreshold());
 
-        // Set the Business ID (Critical for Multi-tenancy)
+        // Set the Business ID
         product.setBusinessId(businessId);
 
         return productRepository.save(product);
@@ -47,6 +47,15 @@ public class ProductService {
      */
     public List<Product> getAllProducts(Long businessId) {
         return productRepository.findByBusinessId(businessId);
+    }
+
+    /**
+     * Retrieves a single product by ID.
+     * Used by Controller for security checks (ownership verification).
+     */
+    public Product getProductById(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + id));
     }
 
     /**

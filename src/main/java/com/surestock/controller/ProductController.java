@@ -43,7 +43,18 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}/stock")
-    public Product updateStock(@PathVariable Long id, @RequestParam int quantityChange) {
+    public Product updateStock(@PathVariable Long id,
+                               @RequestParam int quantityChange,
+                               @AuthenticationPrincipal UserDetails userDetails) {
+        User user = getCurrentUser(userDetails);
+
+        // Verify product belongs to this business
+        Product targetProduct = productService.getProductById(id);
+        if (!targetProduct.getBusinessId().equals(user.getBusinessId())) {
+            // Exception should be caught by GlobalHandler (returns 403 JSON)
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: You cannot modify products from another business.");
+        }
+
         return productService.updateStock(id, quantityChange);
     }
 
@@ -51,9 +62,15 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         User user = getCurrentUser(userDetails);
 
-        // Check Role: Only OWNER can delete
+        // Role Check
         if (user.getRole() != Role.OWNER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Business Owners can delete products.");
+        }
+
+        // Ownership Check (Double check before delete)
+        Product targetProduct = productService.getProductById(id);
+        if (!targetProduct.getBusinessId().equals(user.getBusinessId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: You cannot delete products from another business.");
         }
 
         productService.deleteProduct(id, user.getBusinessId());
