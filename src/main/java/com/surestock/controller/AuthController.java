@@ -1,5 +1,6 @@
 package com.surestock.controller;
 
+import com.surestock.dto.auth.LoginRequestDTO;
 import com.surestock.dto.auth.RegisterRequestDTO;
 import com.surestock.model.User;
 import com.surestock.service.UserService;
@@ -13,21 +14,19 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    // Endpoint: POST /api/auth/register
     @PostMapping("/register")
     public User register(@RequestBody RegisterRequestDTO request) {
-        // Accept Role and BusinessID from the request body
-        return userService.registerUser(
+        // Pass the business NAME, not the ID.
+        // The service will handle creating the ID.
+        return userService.registerOwner(
                 request.getEmail(),
                 request.getPassword(),
-                request.getRole(),
-                request.getBusinessId()
+                request.getBusinessName()
         );
     }
 
-    // Endpoint: POST /api/auth/login
     @PostMapping("/login")
-    public User login(@RequestParam String email, @RequestParam String password) {
-        return userService.authenticate(email, password);
+    public User login(@RequestBody LoginRequestDTO request) {
+        return userService.authenticate(request.getEmail(), request.getPassword());
     }
 }

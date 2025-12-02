@@ -8,5 +8,5 @@ public class RegisterRequestDTO {
     private String email;
     private String password;
     private Role role;
-    private Long businessId;
+    private String businessName;
 }
