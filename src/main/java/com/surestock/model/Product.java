@@ -20,6 +20,10 @@ public class Product {
     private Integer quantity;
     private Integer reorderThreshold;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "business_id", insertable = false, updatable = false) // Use the existing businessId column
+    private Business business;
+
     @Column(name = "business_id", nullable = false)
     private Long businessId;
 }

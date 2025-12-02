@@ -2,8 +2,12 @@ package com.surestock.repository;
 
 import com.surestock.model.Product;
 import jakarta.persistence.LockModeType;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -38,5 +42,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * @return An Optional containing the locked Product.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<Product> findById(Long id);
+    @NotNull
+    Optional<Product> findById(@NotNull Long id);
+
+    /**
+     * Deletes all products belonging to a specific business ID.
+     */
+    @Modifying
+    @Transactional
+    void deleteByBusinessId(Long businessId);
 }
