@@ -1,5 +1,6 @@
 package com.surestock.controller;
 
+import com.surestock.dto.auth.EmployeeCreationRequestDTO;
 import com.surestock.model.Role;
 import com.surestock.model.User;
 import com.surestock.service.BusinessService;
@@ -25,13 +26,31 @@ public class UserController {
     }
 
     /**
-     * [OWNER ACTION] Allows a Business Owner to remove an Employee from the team.
+     * [ADMIN ONLY] Allows a Business Owner to create a new Employee for their business.
+     * The businessId is taken from the Owner's session context.
+     * POST /api/users/employee
+     */
+    @PostMapping("/employee")
+    public User createEmployee(@RequestBody EmployeeCreationRequestDTO dto, @AuthenticationPrincipal UserDetails userDetails) {
+        User owner = getCurrentUser(userDetails);
+
+        // Security Check: Only Owners can hire employees
+        if (owner.getRole() != Role.OWNER) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Only Owners can manage user accounts.");
+        }
+
+        // Action: Create the employee, passing the OWNER's businessId securely
+        return userService.createEmployee(owner.getBusinessId(), dto);
+    }
+
+    /**
+     * [ADMIN ONLY] Allows a Business Owner to remove an Employee from the team.
      * DELETE /api/users/employee/{employeeId}
      */
     @DeleteMapping("/employee/{employeeId}")
     public ResponseEntity<Void> deleteEmployee(
-        @PathVariable Long employeeId,
-        @AuthenticationPrincipal UserDetails userDetails) {
+            @PathVariable Long employeeId,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         User requestingUser = getCurrentUser(userDetails);
 
@@ -68,7 +87,6 @@ public class UserController {
         // This triggers the atomic deletion of all data linked to the businessId.
         businessService.deleteBusinessAndAllData(owner.getBusinessId());
 
-        // Note: The owner's user session will become invalid after this call.
         return ResponseEntity.noContent().build();
     }
 }

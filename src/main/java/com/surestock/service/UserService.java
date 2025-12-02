@@ -5,6 +5,7 @@ import com.surestock.model.Role;
 import com.surestock.model.User;
 import com.surestock.repository.BusinessRepository;
 import com.surestock.repository.UserRepository;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -48,18 +49,34 @@ public class UserService {
         User newUser = new User();
         newUser.setEmail(email);
         newUser.setPassword(encoder.encode(rawPassword));
-        newUser.setRole(Role.OWNER); // Default role for registration endpoint
-        newUser.setBusinessId(newBusiness.getId()); // Use the generated ID
+        newUser.setRole(Role.OWNER);
+        newUser.setBusinessId(newBusiness.getId());
 
         return userRepository.save(newUser);
     }
 
     /**
-     * Authenticates a user based on email and raw password.
-     * * @param email The user's email.
-     * @param rawPassword The plain text password entered by the user.
-     * @return The authenticated User object.
+     * Creates a new Employee and assigns them to the specified Business ID.
+     * This method is called by the Owner (admin).
+     * @param businessId The ID of the owner's business (from security context).
+     * @param dto The employee details.
+     * @return The newly created Employee User object.
      */
+    @Transactional
+    public User createEmployee(Long businessId, com.surestock.dto.auth.@NotNull EmployeeCreationRequestDTO dto) {
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already in use");
+        }
+
+        User newEmployee = new User();
+        newEmployee.setEmail(dto.getEmail());
+        newEmployee.setPassword(encoder.encode(dto.getPassword()));
+        newEmployee.setRole(Role.EMPLOYEE); // Role is always EMPLOYEE here
+        newEmployee.setBusinessId(businessId); // Business ID is assigned securely
+
+        return userRepository.save(newEmployee);
+    }
+
     public User authenticate(String email, String rawPassword) {
         // Find user by email
         User user = userRepository.findByEmail(email)
