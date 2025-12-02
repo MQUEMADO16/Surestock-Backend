@@ -4,37 +4,40 @@ com.surestock
 │
 ├── config/                          // [Configuration]
 │   ├── SecurityConfig.java          // Security setup (CSRF disabled, public API)
-│   └── WebConfig.java               // CORS setup (Allows React to connect)
+│   └── WebConfig.java               // CORS setup
 │
 ├── controller/                      // [API Layer] REST Endpoints
-│   ├── AuthController.java          // Login/Register
+│   ├── AuthController.java          // Login/Register (Updated)
 │   ├── ProductController.java       // Product & Inventory management
 │   └── ReportController.java        // Analytics endpoints
 │
-├── dto/                             // [Data Transfer Objects] JSON shapes
-│   ├── auth/
-│   │   └── RegisterRequestDTO.java  // Clean DTO for registration
+├── dto/                             // [Data Transfer Objects]
+│   ├── auth/                        // [New Package] Auth DTOs
+│   │   ├── LoginRequestDTO.java     // JSON for Login
+│   │   └── RegisterRequestDTO.java  // JSON for Register (includes businessName)
 │   ├── report/
-│   │   └── ReportResultDTO.java     // JSON response for reports
-│   └── ProductDTO.java              // JSON for creating products
+│   │   └── ReportResultDTO.java     // JSON for Reports
+│   └── ProductDTO.java              // JSON for Products
 │
-├── model/                           // [Database Entities] Tables
-│   ├── Product.java                 // (Product + Inventory columns)
-│   ├── Role.java                    // (Enum) OWNER, EMPLOYEE
+├── model/                           // [Database Entities]
+│   ├── Business.java                // [New] Stores Business Name & ID
+│   ├── Product.java
+│   ├── Role.java
 │   ├── SalesTransaction.java
 │   └── User.java
 │
-├── repository/                      // [Data Layer] Database Access
+├── repository/                      // [Data Layer]
+│   ├── BusinessRepository.java      // [New] Access Business table
 │   ├── ProductRepository.java
 │   ├── TransactionRepository.java
 │   └── UserRepository.java
 │
-└── service/                         // [Logic Layer] Business Rules
+└── service/                         // [Logic Layer]
     ├── ProductService.java
-    ├── ReportService.java           // (Context) Strategy selector
-    ├── UserService.java
+    ├── ReportService.java
+    ├── UserService.java             // Updated with Business creation logic
     │
     └── report/                      // [Strategy Pattern]
-        ├── InventoryReportStrategy.java // (Concrete)
-        ├── IReportStrategy.java     // (Interface)
-        └── SalesReportStrategy.java // (Concrete)
+        ├── InventoryReportStrategy.java
+        ├── IReportStrategy.java
+        └── SalesReportStrategy.java
