@@ -1,5 +1,6 @@
 package com.surestock.service;
 
+import com.surestock.dto.BusinessSettingsDTO;
 import com.surestock.model.Business;
 import com.surestock.repository.BusinessRepository;
 import com.surestock.repository.ProductRepository;
@@ -19,6 +20,33 @@ public class BusinessService {
     @Autowired private ProductRepository productRepository;
     @Autowired private TransactionRepository transactionRepository;
 
+    public Business getBusinessById(Long businessId) {
+        return businessRepository.findById(businessId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Business not found."));
+    }
+
+    /**
+     * Updates the configurable settings for a business.
+     */
+    @Transactional
+    public Business updateSettings(Long businessId, BusinessSettingsDTO dto) {
+        Business business = getBusinessById(businessId);
+
+        if (dto.getName() != null) business.setName(dto.getName());
+        if (dto.getCurrency() != null) business.setCurrency(dto.getCurrency());
+        if (dto.getTaxRate() != null) {
+            if (dto.getTaxRate() < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tax rate cannot be negative.");
+            business.setTaxRate(dto.getTaxRate());
+        }
+        if (dto.getLowStockThreshold() != null) {
+            if (dto.getLowStockThreshold() < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Threshold cannot be negative.");
+            business.setLowStockThreshold(dto.getLowStockThreshold());
+        }
+        if (dto.getContactAddress() != null) business.setContactAddress(dto.getContactAddress());
+
+        return businessRepository.save(business);
+    }
+
     /**
      * Deletes the entire business tenant and ALL associated data (products, sales, users).
      * This is an atomic operation: all deletes must succeed, or all fail.
@@ -26,8 +54,7 @@ public class BusinessService {
      */
     @Transactional
     public void deleteBusinessAndAllData(Long businessId) {
-        Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Business not found."));
+        Business business = getBusinessById(businessId);
 
         // Delete dependent data (Products and Transactions)
         productRepository.deleteByBusinessId(businessId);
