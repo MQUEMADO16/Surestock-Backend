@@ -57,8 +57,8 @@ public class BusinessService {
         Business business = getBusinessById(businessId);
 
         // Delete dependent data (Products and Transactions)
-        productRepository.deleteByBusinessId(businessId);
         transactionRepository.deleteByBusinessId(businessId);
+        productRepository.deleteByBusinessId(businessId);
 
         // Delete the users (Owner/Employees)
         userRepository.deleteByBusinessId(businessId);
