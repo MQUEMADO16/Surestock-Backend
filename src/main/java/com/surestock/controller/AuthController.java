@@ -8,6 +8,7 @@ import com.surestock.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,8 +28,6 @@ public class AuthController {
 
     @PostMapping("/register")
     public UserResponseDTO register(@RequestBody RegisterRequestDTO request) {
-        // Pass the business NAME, not the ID.
-        // The service will handle creating the ID.
         User newUser = userService.registerOwner(
                 request.getEmail(),
                 request.getPassword(),
@@ -56,5 +55,17 @@ public class AuthController {
         User user = userService.findByEmail(request.getEmail());
 
         return new UserResponseDTO(user);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
+
+        // This builds a standard HTTP 204 response
+        return ResponseEntity.noContent().build();
     }
 }
