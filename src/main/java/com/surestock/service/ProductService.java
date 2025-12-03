@@ -2,12 +2,14 @@ package com.surestock.service;
 
 import com.surestock.controller.ProductController.ProductDetailsUpdateRequest;
 import com.surestock.dto.ProductDTO;
+import com.surestock.model.Business;
 import com.surestock.model.Product;
 import com.surestock.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,7 +21,10 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    @Transactional
+    @Autowired
+    private BusinessService businessService; // Inject BusinessService to read defaults
+
+    @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
     public Product createProduct(ProductDTO dto, Long businessId) {
         if (dto.getPrice() < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price cannot be negative.");
@@ -34,27 +39,38 @@ public class ProductService {
         product.setPrice(dto.getPrice());
         product.setCost(dto.getCost());
         product.setQuantity(dto.getQuantity());
-        product.setReorderThreshold(dto.getReorderThreshold());
         product.setBusinessId(businessId);
+
+        if (dto.getReorderThreshold() != null) {
+            // Use the specific value provided in the DTO
+            if (dto.getReorderThreshold() < 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Threshold cannot be negative.");
+            }
+            product.setReorderThreshold(dto.getReorderThreshold());
+        } else {
+            // Fallback to Business Default
+            Business business = businessService.getBusinessById(businessId);
+            product.setReorderThreshold(business.getLowStockThreshold());
+        }
 
         return productRepository.save(product);
     }
 
+    @Transactional(readOnly = true)
     public List<Product> getAllProducts(Long businessId) {
         return productRepository.findByBusinessId(businessId);
     }
 
+    @Transactional(readOnly = true)
     public Product getProductById(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with ID: " + id));
     }
 
-    /**
-     * Updates ONLY the stock level (add/subtract).
-     */
-    @Transactional(readOnly = false, isolation = Isolation.READ_COMMITTED)
+    @Transactional(readOnly = false, isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public Product updateStock(Long productId, int quantityChange) {
-        Product product = getProductById(productId);
+        Product product = productRepository.findByIdForUpdate(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 
         int newQuantity = product.getQuantity() + quantityChange;
 
@@ -66,10 +82,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    /**
-     * Updates product details (Name, Price, SKU, etc.) EXCEPT Quantity.
-     */
-    @Transactional(readOnly = false, isolation = Isolation.READ_COMMITTED)
+    @Transactional(readOnly = false, isolation = Isolation.READ_COMMITTED, propagation = Propagation.REQUIRED)
     public Product updateProductDetails(Long productId, ProductDetailsUpdateRequest request) {
         Product product = getProductById(productId);
 
@@ -93,7 +106,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    @Transactional
+    @Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
     public void deleteProduct(Long productId, Long businessId) {
         Product product = productRepository.findByIdAndBusinessId(productId, businessId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found or access denied."));
