@@ -19,6 +19,7 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Transactional
     public Product createProduct(ProductDTO dto, Long businessId) {
         if (dto.getPrice() < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price cannot be negative.");
@@ -50,7 +51,6 @@ public class ProductService {
 
     /**
      * Updates ONLY the stock level (add/subtract).
-     * Prevents read-only errors with explicit transactional settings.
      */
     @Transactional(readOnly = false, isolation = Isolation.READ_COMMITTED)
     public Product updateStock(Long productId, int quantityChange) {
@@ -73,12 +73,8 @@ public class ProductService {
     public Product updateProductDetails(Long productId, ProductDetailsUpdateRequest request) {
         Product product = getProductById(productId);
 
-        if (request.getName() != null) {
-            product.setName(request.getName());
-        }
-        if (request.getSku() != null) {
-            product.setSku(request.getSku());
-        }
+        if (request.getName() != null) product.setName(request.getName());
+        if (request.getSku() != null) product.setSku(request.getSku());
 
         if (request.getPrice() != null) {
             if (request.getPrice() < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price cannot be negative.");
@@ -97,6 +93,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @Transactional
     public void deleteProduct(Long productId, Long businessId) {
         Product product = productRepository.findByIdAndBusinessId(productId, businessId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found or access denied."));

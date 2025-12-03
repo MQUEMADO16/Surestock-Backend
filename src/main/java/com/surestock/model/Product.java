@@ -1,5 +1,6 @@
 package com.surestock.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // Import this
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,7 +22,8 @@ public class Product {
     private Integer reorderThreshold;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", insertable = false, updatable = false) // Use the existing businessId column
+    @JoinColumn(name = "business_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Business business;
 
     @Column(name = "business_id", nullable = false)
