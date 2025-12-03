@@ -18,7 +18,7 @@ public class SalesReportStrategy implements IReportStrategy {
         // Logic: Sum (Sale Price * Quantity Sold) for all history
         double totalRevenue = transactions.stream()
                 .mapToDouble(t -> {
-                    double price = (t.getSalePrice() != null) ? t.getSalePrice() : 0.0;
+                    double price = (t.getTotalPrice() != null) ? t.getTotalPrice() : 0.0;
                     int qty = (t.getQuantitySold() != null) ? t.getQuantitySold() : 0;
                     return price * qty;
                 })
