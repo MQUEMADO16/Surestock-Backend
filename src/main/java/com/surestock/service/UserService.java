@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 public class UserService implements UserDetailsService {
 
@@ -80,6 +82,13 @@ public class UserService implements UserDetailsService {
         newEmployee.setBusinessId(businessId);
 
         return userRepository.save(newEmployee);
+    }
+
+    public List<User> getAllEmployees(Long businessId) {
+        // Assuming your UserRepository extends JpaRepository or CrudRepository
+        // You might need to add `List<User> findByBusinessId(Long businessId);` to your repository interface if it's not there.
+        // Assuming findByBusinessId exists based on standard naming conventions or previous context.
+        return userRepository.findByBusinessId(businessId);
     }
 
     public User findByEmail(String email) {
