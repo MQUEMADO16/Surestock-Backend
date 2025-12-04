@@ -47,6 +47,17 @@ public class UserController {
     }
 
     /**
+     * Retrieves the currently logged-in user's details.
+     * Used by the frontend to persist session state on refresh.
+     * GET /api/users/me
+     */
+    @GetMapping("/me")
+    public UserResponseDTO getCurrentUserDetails(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = getCurrentUser(userDetails);
+        return new UserResponseDTO(user);
+    }
+
+    /**
      * [ADMIN ONLY] Allows a Business Owner to remove an Employee from the team.
      * DELETE /api/users/employee/{employeeId}
      */
