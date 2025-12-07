@@ -56,4 +56,11 @@ public class SalesService {
 
         return transactions;
     }
+
+    /**
+     * Retrieves the full sales history for a business.
+     */
+    public List<SalesTransaction> getHistory(Long businessId) {
+        return transactionRepository.findByBusinessIdOrderByTimestampDesc(businessId);
+    }
 }

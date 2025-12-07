@@ -14,6 +14,8 @@ public interface TransactionRepository extends JpaRepository<SalesTransaction, L
     // For analytics: Find transactions by business
     List<SalesTransaction> findByBusinessId(Long businessId);
 
+    List<SalesTransaction> findByBusinessIdOrderByTimestampDesc(Long businessId);
+
     /**
      * Deletes all sales transactions belonging to a specific business ID.
      */
