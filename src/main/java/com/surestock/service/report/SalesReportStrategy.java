@@ -1,16 +1,10 @@
 package com.surestock.service.report;
 
+import com.surestock.dto.report.ReportResultDTO;
 import com.surestock.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Calculates the total sales revenue over a period, supporting date range filtering via parameters.
- */
 @Component
 public class SalesReportStrategy implements IReportStrategy {
 
@@ -18,18 +12,10 @@ public class SalesReportStrategy implements IReportStrategy {
     private TransactionRepository transactionRepository;
 
     @Override
-    public Map<String, Object> generate(Long businessId, Map<String, String> parameters) {
-        LocalDateTime startDate = parameters.containsKey("startDate")
-                ? LocalDateTime.parse(parameters.get("startDate"))
-                : LocalDateTime.MIN;
+    public ReportResultDTO generate(Long businessId) {
+        var transactions = transactionRepository.findByBusinessId(businessId);
 
-        LocalDateTime endDate = parameters.containsKey("endDate")
-                ? LocalDateTime.parse(parameters.get("endDate"))
-                : LocalDateTime.MAX;
-
-        var transactions = transactionRepository.findByBusinessIdAndTimestampBetween(businessId, startDate, endDate);
-
-        // Logic: Sum (Sale Price * Quantity Sold)
+        // Logic: Sum (Sale Price * Quantity Sold) for all history
         double totalRevenue = transactions.stream()
                 .mapToDouble(t -> {
                     double price = (t.getTotalPrice() != null) ? t.getTotalPrice() : 0.0;
@@ -38,14 +24,10 @@ public class SalesReportStrategy implements IReportStrategy {
                 })
                 .sum();
 
-        Map<String, Object> report = new HashMap<>();
-        report.put("title", "Sales Revenue Report");
-        report.put("summary", String.format("Total Revenue from %s to %s: $%.2f",
-                startDate.toLocalDate(), endDate.toLocalDate(), totalRevenue));
-        report.put("totalRevenue", totalRevenue);
-        report.put("transactionCount", transactions.size());
-        report.put("type", getType());
-        return report;
+        return new ReportResultDTO(
+                "Sales Revenue Report",
+                "Total Lifetime Revenue: $" + String.format("%.2f", totalRevenue)
+        );
     }
 
     @Override

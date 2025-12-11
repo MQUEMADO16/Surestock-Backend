@@ -54,19 +54,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Transactional
     void deleteByBusinessId(Long businessId);
-
-    /**
-     * Finds products where the current quantity is less than or equal to the reorder threshold.
-     */
-    @Query("SELECT p FROM Product p WHERE p.businessId = :businessId AND p.quantity <= p.reorderThreshold")
-    List<Product> findLowStockProducts(@Param("businessId") Long businessId);
-
-     /**
-     * Finds products that have stock > 0 but have not appeared in any sales transaction
-     * within the specified date range.
-     */
-    @Query("SELECT p FROM Product p WHERE p.businessId = :businessId AND p.quantity > 0 AND p.id NOT IN (" +
-            "  SELECT DISTINCT st.productId FROM SalesTransaction st WHERE st.businessId = :businessId AND st.timestamp >= :startDate" +
-            ")")
-    List<Product> findDeadStockCandidates(@Param("businessId") Long businessId, @Param("startDate") java.time.LocalDateTime startDate);
 }
