@@ -1,6 +1,6 @@
 package com.surestock.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // Import this
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -23,7 +23,7 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id", insertable = false, updatable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnore
     private Business business;
 
     @Column(name = "business_id", nullable = false)

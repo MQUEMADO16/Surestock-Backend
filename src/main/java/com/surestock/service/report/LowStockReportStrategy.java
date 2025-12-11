@@ -12,45 +12,39 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class InventoryReportStrategy implements IReportStrategy {
+public class LowStockReportStrategy implements IReportStrategy {
 
     @Autowired
     private ProductRepository productRepository;
 
     @Override
     public ReportResultDTO generate(Long businessId) {
-        var products = productRepository.findByBusinessId(businessId);
+        List<Product> lowStockProducts = productRepository.findLowStockProducts(businessId);
         List<Map<String, Object>> tableData = new ArrayList<>();
 
-        double totalValue = 0.0;
-
-        for (Product p : products) {
-            double price = (p.getPrice() != null) ? p.getPrice() : 0.0;
-            int qty = (p.getQuantity() != null) ? p.getQuantity() : 0;
-            double stockValue = price * qty;
-
-            totalValue += stockValue;
-
-            // Build data row for the frontend
+        for (Product p : lowStockProducts) {
             Map<String, Object> row = new HashMap<>();
             row.put("name", p.getName());
             row.put("sku", p.getSku());
-            row.put("quantity", qty);
-            row.put("unit_price", price);
-            row.put("total_value", stockValue); // Helpful for sorting by "most valuable stock"
+            row.put("quantity", p.getQuantity());
+            row.put("threshold", p.getReorderThreshold());
             tableData.add(row);
         }
 
+        String summary = lowStockProducts.isEmpty()
+                ? "Inventory is healthy."
+                : "Action Needed: " + lowStockProducts.size() + " items are below reorder threshold.";
+
         return new ReportResultDTO(
-                "Inventory Valuation Report",
-                "Total Stock Value: $" + String.format("%.2f", totalValue),
-                "TABLE", // Tells frontend to render a data grid/table
+                "Low Stock Alerts",
+                summary,
+                "TABLE", // Frontend should render this as a Data Grid
                 tableData
         );
     }
 
     @Override
     public String getType() {
-        return "INVENTORY";
+        return "LOW_STOCK";
     }
 }

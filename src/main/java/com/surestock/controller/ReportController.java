@@ -21,19 +21,22 @@ public class ReportController {
 
     // Helper method to get the current user's business ID
     private Long getCurrentBusinessId(UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new IllegalStateException("User must be logged in to view reports");
+        }
         User user = userService.findByEmail(userDetails.getUsername());
+        if (user == null) {
+            throw new IllegalStateException("User record not found");
+        }
         return user.getBusinessId();
     }
 
-    // Endpoint: GET /api/reports/INVENTORY or /api/reports/SALES
+    // Endpoint: GET /api/reports/SALES (or INVENTORY, LOW_STOCK, etc.)
     @GetMapping("/{type}")
     public ReportResultDTO getReport(@PathVariable String type, @AuthenticationPrincipal UserDetails userDetails) {
-        // Dynamically get the business ID from the logged-in user
         Long businessId = getCurrentBusinessId(userDetails);
 
-        // If reportService throws IllegalArgumentException (invalid type),
-        // GlobalHandler's generic catch-all will log it and return 500,
-        // OR we can add a specific handler for it later.
+        // This delegates to the factory service we just created
         return reportService.getReport(type.toUpperCase(), businessId);
     }
 }

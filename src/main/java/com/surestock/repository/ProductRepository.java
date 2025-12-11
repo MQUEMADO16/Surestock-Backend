@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,4 +55,23 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Transactional
     void deleteByBusinessId(Long businessId);
+
+    /**
+     * Finds products where the current quantity is less than or equal to the reorder threshold.
+     * Only returns products that strictly belong to the specified business.
+     */
+    @Query("SELECT p FROM Product p WHERE p.businessId = :businessId AND p.quantity <= p.reorderThreshold")
+    List<Product> findLowStockProducts(@Param("businessId") Long businessId);
+
+    /**
+     * Finds products that have NOT been sold since the given cutoff date.
+     * "Dead Stock" = Inventory that is just sitting there.
+     */
+    @Query("SELECT p FROM Product p " +
+            "WHERE p.businessId = :businessId " +
+            "AND p.id NOT IN (" +
+            "  SELECT t.product.id FROM SalesTransaction t " +
+            "  WHERE t.businessId = :businessId AND t.timestamp >= :cutoffDate" +
+            ")")
+    List<Product> findDeadStock(@Param("businessId") Long businessId, @Param("cutoffDate") LocalDateTime cutoffDate);
 }
