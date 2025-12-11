@@ -4,7 +4,7 @@ import com.surestock.dto.transaction.SaleRequestDTO;
 import com.surestock.dto.transaction.TransactionResponseDTO;
 import com.surestock.model.SalesTransaction;
 import com.surestock.model.User;
-import com.surestock.service.SalesService;
+import com.surestock.service.TransactionService;
 import com.surestock.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -19,7 +20,7 @@ import java.util.List;
 public class TransactionController {
 
     @Autowired
-    private SalesService salesService;
+    private TransactionService transactionService;
 
     @Autowired
     private UserService userService;
@@ -31,7 +32,7 @@ public class TransactionController {
     @GetMapping()
     public ResponseEntity<List<TransactionResponseDTO>> getTransactionHistory(@AuthenticationPrincipal UserDetails userDetails) {
         User user = getCurrentUser(userDetails);
-        List<SalesTransaction> transactions = salesService.getHistory(user.getBusinessId());
+        List<SalesTransaction> transactions = transactionService.getHistory(user.getBusinessId());
 
         List<TransactionResponseDTO> dtos = transactions.stream()
                 .map(tx -> TransactionResponseDTO.builder()
@@ -57,6 +58,21 @@ public class TransactionController {
         User user = getCurrentUser(userDetails);
 
         // Both Owners and Employees can make sales, so no Role check needed.
-        return salesService.processSale(user.getBusinessId(), request);
+        return transactionService.processSale(user.getBusinessId(), request);
+    }
+
+    /**
+     * Gets transaction history for the logged-in business, with optional date filtering.
+     * GET /api/transactions?startDate=...&endDate=...
+     */
+    @GetMapping
+    public List<SalesTransaction> getTransactionHistory(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) LocalDateTime startDate,
+            @RequestParam(required = false) LocalDateTime endDate) {
+
+        User user = getCurrentUser(userDetails);
+
+        return transactionService.getTransactionsByDateRange(user.getBusinessId(), startDate, endDate);
     }
 }

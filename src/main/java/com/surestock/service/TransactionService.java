@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class SalesService {
+public class TransactionService {
 
     @Autowired
     private ProductService productService;
@@ -62,5 +62,15 @@ public class SalesService {
      */
     public List<SalesTransaction> getHistory(Long businessId) {
         return transactionRepository.findByBusinessIdOrderByTimestampDesc(businessId);
+    }
+
+    /**
+     * Retrieves all sales transactions for a business within an optional date range.
+     */
+    public List<SalesTransaction> getTransactionsByDateRange(Long businessId, LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate == null) startDate = LocalDateTime.MIN;
+        if (endDate == null) endDate = LocalDateTime.MAX;
+
+        return transactionRepository.findByBusinessIdAndTimestampBetween(businessId, startDate, endDate);
     }
 }
